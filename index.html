@@ -111,9 +111,10 @@
 
     var map = L.map('map').setView([39.7392, -104.9903], 11);
 
+    // Light minimal basemap
     L.tileLayer('https://{s}.basemaps.cartocdn.com/light_all/{z}/{x}/{y}{r}.png', {
-  attribution: '&copy; OpenStreetMap & CartoDB'
-}).addTo(map);
+      attribution: '&copy; OpenStreetMap & CartoDB'
+    }).addTo(map);
 
     var seasons = ["Winter", "Spring", "Summer", "Fall"];
 
@@ -124,12 +125,11 @@
 
       if (variable === "pred_severity") {
 
-  return value > 1.60 ? "#800026" :
-         value > 1.45 ? "#BD0026" :
-         value > 1.30 ? "#E31A1C" :
-         value > 1.15 ? "#FC4E2A" :
-                         "#FEB24C";
-}
+        return value > 1.60 ? "#800026" :
+               value > 1.45 ? "#BD0026" :
+               value > 1.30 ? "#E31A1C" :
+               value > 1.15 ? "#FC4E2A" :
+                               "#FEB24C";
 
       } else {
 
@@ -158,11 +158,11 @@
 
         legend.innerHTML =
           "<b>Crime Severity</b><br><br>" +
-'<i style="background:#800026"></i> > 1.60<br>' +
-'<i style="background:#BD0026"></i> 1.45 - 1.60<br>' +
-'<i style="background:#E31A1C"></i> 1.30 - 1.45<br>' +
-'<i style="background:#FC4E2A"></i> 1.15 - 1.30<br>' +
-'<i style="background:#FEB24C"></i> < 1.15';
+          '<i style="background:#800026"></i> > 1.60<br>' +
+          '<i style="background:#BD0026"></i> 1.45 - 1.60<br>' +
+          '<i style="background:#E31A1C"></i> 1.30 - 1.45<br>' +
+          '<i style="background:#FC4E2A"></i> 1.15 - 1.30<br>' +
+          '<i style="background:#FEB24C"></i> < 1.15';
 
       } else {
 
@@ -191,9 +191,7 @@
         type: "FeatureCollection",
 
         features: geojsonData.features.filter(function(feature) {
-
           return feature.properties.season === season;
-
         })
       };
 
@@ -201,53 +199,36 @@
 
         pointToLayer: function(feature, latlng) {
 
-          var value =
-            feature.properties[selectedVariable];
+          var value = feature.properties[selectedVariable];
 
           return L.circleMarker(latlng, {
-
             radius: 6,
-
             fillColor: getColor(value, selectedVariable),
-
             color: "#333",
-
             weight: 1,
-
             opacity: 1,
-
             fillOpacity: 0.8
-
           });
         },
 
         onEachFeature: function(feature, layer) {
 
           var p = feature.properties;
-
           var selectedValue = p[selectedVariable];
 
           layer.bindPopup(
-
             "<b>Stop ID:</b> " + p.stop_id +
-
             "<br><b>Season:</b> " + p.season +
-
             "<br><b>" + getVariableLabel(selectedVariable) +
             ":</b> " + selectedValue.toFixed(4) +
-
             "<br><b>Predicted Crime Rate:</b> " +
             p.pred_crime_rate.toFixed(4) +
-
             "<br><b>Predicted Severity:</b> " +
             p.pred_severity.toFixed(2) +
-
             "<br><b>Population Density:</b> " +
             p.pop_density.toFixed(2) +
-
             "<br><b>Median Income:</b> $" +
             p.median_income.toFixed(0) +
-
             "<br><b>Dominant Land Use:</b> " +
             p.dominant_lu_200m
           );
@@ -257,19 +238,13 @@
     }
 
     fetch("seasonal_predictions_web_200m.geojson")
-
       .then(response => response.json())
-
       .then(data => {
-
         geojsonData = data;
-
         drawSeason("Winter");
-
       });
 
     document.getElementById("seasonSlider")
-
       .addEventListener("input", function(e) {
 
         var selectedSeason = seasons[e.target.value];
@@ -278,20 +253,15 @@
           .textContent = selectedSeason;
 
         drawSeason(selectedSeason);
-
       });
 
     document.getElementById("variableSelect")
-
       .addEventListener("change", function() {
 
         var selectedSeason =
-          seasons[
-            document.getElementById("seasonSlider").value
-          ];
+          seasons[document.getElementById("seasonSlider").value];
 
         drawSeason(selectedSeason);
-
       });
 
   </script>
