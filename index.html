@@ -1,0 +1,84 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <title>Denver RTD Crime Prediction Map</title>
+  <meta charset="utf-8" />
+
+  <link rel="stylesheet" href="https://unpkg.com/leaflet/dist/leaflet.css"/>
+
+  <style>
+    body { margin: 0; font-family: Arial, sans-serif; }
+    #map { height: 100vh; width: 100%; }
+    .title {
+      position: absolute;
+      top: 10px;
+      left: 50px;
+      z-index: 1000;
+      background: white;
+      padding: 10px 14px;
+      border-radius: 6px;
+      box-shadow: 0 0 6px rgba(0,0,0,0.3);
+    }
+  </style>
+</head>
+
+<body>
+  <div class="title">
+    <b>Denver RTD Crime Prediction Map</b><br>
+    Predicted crime rate and severity by stop
+  </div>
+
+  <div id="map"></div>
+
+  <script src="https://unpkg.com/leaflet/dist/leaflet.js"></script>
+
+  <script>
+    var map = L.map('map').setView([39.7392, -104.9903], 11);
+
+    L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
+      attribution: '&copy; OpenStreetMap contributors'
+    }).addTo(map);
+
+    function getColor(rate) {
+      return rate > 1.25 ? "#800026" :
+             rate > 0.75 ? "#BD0026" :
+             rate > 0.35 ? "#E31A1C" :
+             rate > 0.10 ? "#FC4E2A" :
+                           "#FEB24C";
+    }
+
+    fetch("seasonal_predictions_web_200m.geojson")
+      .then(response => response.json())
+      .then(data => {
+        L.geoJSON(data, {
+          pointToLayer: function(feature, latlng) {
+            var rate = feature.properties.pred_crime_rate;
+
+            return L.circleMarker(latlng, {
+              radius: 6,
+              fillColor: getColor(rate),
+              color: "#333",
+              weight: 1,
+              opacity: 1,
+              fillOpacity: 0.8
+            });
+          },
+
+          onEachFeature: function(feature, layer) {
+            var p = feature.properties;
+
+            layer.bindPopup(
+              "<b>Stop ID:</b> " + p.stop_id +
+              "<br><b>Season:</b> " + p.season +
+              "<br><b>Predicted Crime Rate:</b> " + p.pred_crime_rate.toFixed(4) +
+              "<br><b>Predicted Severity:</b> " + p.pred_severity.toFixed(2) +
+              "<br><b>Population Density:</b> " + p.pop_density.toFixed(2) +
+              "<br><b>Median Income:</b> $" + p.median_income.toFixed(0) +
+              "<br><b>Dominant Land Use:</b> " + p.dominant_lu_200m
+            );
+          }
+        }).addTo(map);
+      });
+  </script>
+</body>
+</html>
