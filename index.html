@@ -111,8 +111,8 @@
 
     var map = L.map('map').setView([39.7392, -104.9903], 11);
 
-    L.tileLayer('https://server.arcgisonline.com/ArcGIS/rest/services/Canvas/World_Light_Gray_Base/MapServer/tile/{z}/{y}/{x}', {
-  attribution: 'Tiles &copy; Esri'
+    L.tileLayer('https://{s}.basemaps.cartocdn.com/light_all/{z}/{x}/{y}{r}.png', {
+  attribution: '&copy; OpenStreetMap & CartoDB'
 }).addTo(map);
 
     var seasons = ["Winter", "Spring", "Summer", "Fall"];
@@ -124,11 +124,12 @@
 
       if (variable === "pred_severity") {
 
-        return value > 4 ? "#800026" :
-               value > 3 ? "#BD0026" :
-               value > 2 ? "#E31A1C" :
-               value > 1 ? "#FC4E2A" :
-                           "#FEB24C";
+  return value > 1.60 ? "#800026" :
+         value > 1.45 ? "#BD0026" :
+         value > 1.30 ? "#E31A1C" :
+         value > 1.15 ? "#FC4E2A" :
+                         "#FEB24C";
+}
 
       } else {
 
@@ -157,11 +158,11 @@
 
         legend.innerHTML =
           "<b>Crime Severity</b><br><br>" +
-          '<i style="background:#800026"></i> 4 - 5<br>' +
-          '<i style="background:#BD0026"></i> 3 - 4<br>' +
-          '<i style="background:#E31A1C"></i> 2 - 3<br>' +
-          '<i style="background:#FC4E2A"></i> 1 - 2<br>' +
-          '<i style="background:#FEB24C"></i> 0 - 1';
+'<i style="background:#800026"></i> > 1.60<br>' +
+'<i style="background:#BD0026"></i> 1.45 - 1.60<br>' +
+'<i style="background:#E31A1C"></i> 1.30 - 1.45<br>' +
+'<i style="background:#FC4E2A"></i> 1.15 - 1.30<br>' +
+'<i style="background:#FEB24C"></i> < 1.15';
 
       } else {
 
