@@ -3,11 +3,19 @@
 <head>
   <title>Denver RTD Crime Prediction Map</title>
   <meta charset="utf-8" />
+
   <link rel="stylesheet" href="https://unpkg.com/leaflet/dist/leaflet.css"/>
 
   <style>
-    body { margin: 0; font-family: Arial, sans-serif; }
-    #map { height: 100vh; width: 100%; }
+    body {
+      margin: 0;
+      font-family: Arial, sans-serif;
+    }
+
+    #map {
+      height: 100vh;
+      width: 100%;
+    }
 
     .title {
       position: absolute;
@@ -31,25 +39,40 @@
       border-radius: 8px;
       box-shadow: 0 0 6px rgba(0,0,0,0.3);
       text-align: center;
-      width: 280px;
+      width: 320px;
     }
 
     input[type="range"] {
-      width: 230px;
+      width: 250px;
+    }
+
+    select {
+      margin-top: 6px;
+      padding: 4px;
+      width: 180px;
     }
   </style>
 </head>
 
 <body>
+
   <div class="title">
     <b>Denver RTD Crime Prediction Map</b><br>
-    Predicted crime rate and severity by stop
+    Predicted crime rate and severity by RTD stop
   </div>
 
   <div class="slider-box">
     <b>Season: <span id="seasonLabel">Winter</span></b><br>
     <input type="range" id="seasonSlider" min="0" max="3" step="1" value="0">
     <div>Winter &nbsp; Spring &nbsp; Summer &nbsp; Fall</div>
+
+    <br>
+
+    <b>Display:</b><br>
+    <select id="variableSelect">
+      <option value="pred_crime_rate">Crime Rate</option>
+      <option value="pred_severity">Crime Severity</option>
+    </select>
   </div>
 
   <div id="map"></div>
@@ -67,18 +90,36 @@
     var geojsonData;
     var currentLayer;
 
-    function getColor(rate) {
-      return rate > 1.25 ? "#800026" :
-             rate > 0.75 ? "#BD0026" :
-             rate > 0.35 ? "#E31A1C" :
-             rate > 0.10 ? "#FC4E2A" :
+    function getColor(value, variable) {
+      if (variable === "pred_severity") {
+        return value > 4 ? "#800026" :
+               value > 3 ? "#BD0026" :
+               value > 2 ? "#E31A1C" :
+               value > 1 ? "#FC4E2A" :
                            "#FEB24C";
+      } else {
+        return value > 1.25 ? "#800026" :
+               value > 0.75 ? "#BD0026" :
+               value > 0.35 ? "#E31A1C" :
+               value > 0.10 ? "#FC4E2A" :
+                               "#FEB24C";
+      }
+    }
+
+    function getVariableLabel(variable) {
+      if (variable === "pred_severity") {
+        return "Predicted Crime Severity";
+      } else {
+        return "Predicted Crime Rate";
+      }
     }
 
     function drawSeason(season) {
       if (currentLayer) {
         map.removeLayer(currentLayer);
       }
+
+      var selectedVariable = document.getElementById("variableSelect").value;
 
       var filteredData = {
         type: "FeatureCollection",
@@ -89,11 +130,11 @@
 
       currentLayer = L.geoJSON(filteredData, {
         pointToLayer: function(feature, latlng) {
-          var rate = feature.properties.pred_crime_rate;
+          var value = feature.properties[selectedVariable];
 
           return L.circleMarker(latlng, {
             radius: 6,
-            fillColor: getColor(rate),
+            fillColor: getColor(value, selectedVariable),
             color: "#333",
             weight: 1,
             opacity: 1,
@@ -103,10 +144,13 @@
 
         onEachFeature: function(feature, layer) {
           var p = feature.properties;
+          var selectedVariable = document.getElementById("variableSelect").value;
+          var selectedValue = p[selectedVariable];
 
           layer.bindPopup(
             "<b>Stop ID:</b> " + p.stop_id +
             "<br><b>Season:</b> " + p.season +
+            "<br><b>" + getVariableLabel(selectedVariable) + ":</b> " + selectedValue.toFixed(4) +
             "<br><b>Predicted Crime Rate:</b> " + p.pred_crime_rate.toFixed(4) +
             "<br><b>Predicted Severity:</b> " + p.pred_severity.toFixed(2) +
             "<br><b>Population Density:</b> " + p.pop_density.toFixed(2) +
@@ -129,6 +173,12 @@
       document.getElementById("seasonLabel").textContent = selectedSeason;
       drawSeason(selectedSeason);
     });
+
+    document.getElementById("variableSelect").addEventListener("change", function() {
+      var selectedSeason = seasons[document.getElementById("seasonSlider").value];
+      drawSeason(selectedSeason);
+    });
   </script>
+
 </body>
 </html>
