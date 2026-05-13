@@ -51,6 +51,27 @@
       padding: 4px;
       width: 180px;
     }
+
+    .legend {
+      position: absolute;
+      bottom: 25px;
+      right: 20px;
+      z-index: 1000;
+      background: white;
+      padding: 10px;
+      border-radius: 8px;
+      box-shadow: 0 0 6px rgba(0,0,0,0.3);
+      line-height: 18px;
+      width: 170px;
+    }
+
+    .legend i {
+      width: 18px;
+      height: 18px;
+      float: left;
+      margin-right: 8px;
+      opacity: 0.8;
+    }
   </style>
 </head>
 
@@ -63,41 +84,54 @@
 
   <div class="slider-box">
     <b>Season: <span id="seasonLabel">Winter</span></b><br>
+
     <input type="range" id="seasonSlider" min="0" max="3" step="1" value="0">
-    <div>Winter &nbsp; Spring &nbsp; Summer &nbsp; Fall</div>
+
+    <div>
+      Winter &nbsp; Spring &nbsp; Summer &nbsp; Fall
+    </div>
 
     <br>
 
     <b>Display:</b><br>
+
     <select id="variableSelect">
       <option value="pred_crime_rate">Crime Rate</option>
       <option value="pred_severity">Crime Severity</option>
     </select>
   </div>
 
+  <div class="legend" id="legend"></div>
+
   <div id="map"></div>
 
   <script src="https://unpkg.com/leaflet/dist/leaflet.js"></script>
 
   <script>
+
     var map = L.map('map').setView([39.7392, -104.9903], 11);
 
-    L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
-      attribution: '&copy; OpenStreetMap contributors'
-    }).addTo(map);
+    L.tileLayer('https://server.arcgisonline.com/ArcGIS/rest/services/Canvas/World_Light_Gray_Base/MapServer/tile/{z}/{y}/{x}', {
+  attribution: 'Tiles &copy; Esri'
+}).addTo(map);
 
     var seasons = ["Winter", "Spring", "Summer", "Fall"];
+
     var geojsonData;
     var currentLayer;
 
     function getColor(value, variable) {
+
       if (variable === "pred_severity") {
+
         return value > 4 ? "#800026" :
                value > 3 ? "#BD0026" :
                value > 2 ? "#E31A1C" :
                value > 1 ? "#FC4E2A" :
                            "#FEB24C";
+
       } else {
+
         return value > 1.25 ? "#800026" :
                value > 0.75 ? "#BD0026" :
                value > 0.35 ? "#E31A1C" :
@@ -107,6 +141,7 @@
     }
 
     function getVariableLabel(variable) {
+
       if (variable === "pred_severity") {
         return "Predicted Crime Severity";
       } else {
@@ -114,70 +149,150 @@
       }
     }
 
+    function updateLegend(variable) {
+
+      var legend = document.getElementById("legend");
+
+      if (variable === "pred_severity") {
+
+        legend.innerHTML =
+          "<b>Crime Severity</b><br><br>" +
+          '<i style="background:#800026"></i> 4 - 5<br>' +
+          '<i style="background:#BD0026"></i> 3 - 4<br>' +
+          '<i style="background:#E31A1C"></i> 2 - 3<br>' +
+          '<i style="background:#FC4E2A"></i> 1 - 2<br>' +
+          '<i style="background:#FEB24C"></i> 0 - 1';
+
+      } else {
+
+        legend.innerHTML =
+          "<b>Crime Rate</b><br><br>" +
+          '<i style="background:#800026"></i> > 1.25<br>' +
+          '<i style="background:#BD0026"></i> 0.75 - 1.25<br>' +
+          '<i style="background:#E31A1C"></i> 0.35 - 0.75<br>' +
+          '<i style="background:#FC4E2A"></i> 0.10 - 0.35<br>' +
+          '<i style="background:#FEB24C"></i> < 0.10';
+      }
+    }
+
     function drawSeason(season) {
+
       if (currentLayer) {
         map.removeLayer(currentLayer);
       }
 
-      var selectedVariable = document.getElementById("variableSelect").value;
+      var selectedVariable =
+        document.getElementById("variableSelect").value;
+
+      updateLegend(selectedVariable);
 
       var filteredData = {
         type: "FeatureCollection",
+
         features: geojsonData.features.filter(function(feature) {
+
           return feature.properties.season === season;
+
         })
       };
 
       currentLayer = L.geoJSON(filteredData, {
+
         pointToLayer: function(feature, latlng) {
-          var value = feature.properties[selectedVariable];
+
+          var value =
+            feature.properties[selectedVariable];
 
           return L.circleMarker(latlng, {
+
             radius: 6,
+
             fillColor: getColor(value, selectedVariable),
+
             color: "#333",
+
             weight: 1,
+
             opacity: 1,
+
             fillOpacity: 0.8
+
           });
         },
 
         onEachFeature: function(feature, layer) {
+
           var p = feature.properties;
-          var selectedVariable = document.getElementById("variableSelect").value;
+
           var selectedValue = p[selectedVariable];
 
           layer.bindPopup(
+
             "<b>Stop ID:</b> " + p.stop_id +
+
             "<br><b>Season:</b> " + p.season +
-            "<br><b>" + getVariableLabel(selectedVariable) + ":</b> " + selectedValue.toFixed(4) +
-            "<br><b>Predicted Crime Rate:</b> " + p.pred_crime_rate.toFixed(4) +
-            "<br><b>Predicted Severity:</b> " + p.pred_severity.toFixed(2) +
-            "<br><b>Population Density:</b> " + p.pop_density.toFixed(2) +
-            "<br><b>Median Income:</b> $" + p.median_income.toFixed(0) +
-            "<br><b>Dominant Land Use:</b> " + p.dominant_lu_200m
+
+            "<br><b>" + getVariableLabel(selectedVariable) +
+            ":</b> " + selectedValue.toFixed(4) +
+
+            "<br><b>Predicted Crime Rate:</b> " +
+            p.pred_crime_rate.toFixed(4) +
+
+            "<br><b>Predicted Severity:</b> " +
+            p.pred_severity.toFixed(2) +
+
+            "<br><b>Population Density:</b> " +
+            p.pop_density.toFixed(2) +
+
+            "<br><b>Median Income:</b> $" +
+            p.median_income.toFixed(0) +
+
+            "<br><b>Dominant Land Use:</b> " +
+            p.dominant_lu_200m
           );
         }
+
       }).addTo(map);
     }
 
     fetch("seasonal_predictions_web_200m.geojson")
+
       .then(response => response.json())
+
       .then(data => {
+
         geojsonData = data;
+
         drawSeason("Winter");
+
       });
 
-    document.getElementById("seasonSlider").addEventListener("input", function(e) {
-      var selectedSeason = seasons[e.target.value];
-      document.getElementById("seasonLabel").textContent = selectedSeason;
-      drawSeason(selectedSeason);
-    });
+    document.getElementById("seasonSlider")
 
-    document.getElementById("variableSelect").addEventListener("change", function() {
-      var selectedSeason = seasons[document.getElementById("seasonSlider").value];
-      drawSeason(selectedSeason);
-    });
+      .addEventListener("input", function(e) {
+
+        var selectedSeason = seasons[e.target.value];
+
+        document.getElementById("seasonLabel")
+          .textContent = selectedSeason;
+
+        drawSeason(selectedSeason);
+
+      });
+
+    document.getElementById("variableSelect")
+
+      .addEventListener("change", function() {
+
+        var selectedSeason =
+          seasons[
+            document.getElementById("seasonSlider").value
+          ];
+
+        drawSeason(selectedSeason);
+
+      });
+
   </script>
 
 </body>
